@@ -40,6 +40,7 @@ exports.updateOrder = async (req, res) => {
         order.status = status;
       }
   
+      
       // ✅ Update Total Amount
       if (totalAmount !== undefined) {
         if (isNaN(totalAmount) || totalAmount < 0) {
