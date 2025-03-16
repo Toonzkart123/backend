@@ -14,7 +14,15 @@ const storeSchema = new mongoose.Schema({
   description: { type: String },
   commissionRate: { type: Number},
   paymentTerms: { type: String },
+
+  inventory: [{
+    book: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
+    stock: { type: Number, default: 0 }
+  }],
+
   createdAt: { type: Date, default: Date.now },
 });
+
+
 
 module.exports = mongoose.model("Store", storeSchema);
