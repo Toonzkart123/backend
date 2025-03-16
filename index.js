@@ -18,6 +18,7 @@ const adminBookRoutes = require("./src/routes/adminBookRoutes");
 const adminUserRoutes = require("./src/routes/adminUserRoutes");
 
 const adminSchoolRoutes = require("./src/routes/adminSchoolRoutes"); 
+const adminStoreRoutes = require("./src/routes/adminStoreRoutes");
 
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/api/admin/users", adminUserRoutes);
 
 app.use("/api/admin/schools", adminSchoolRoutes); 
 
+app.use("/api/admin/stores", adminStoreRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to ToonzKart API!");
