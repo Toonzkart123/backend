@@ -65,25 +65,46 @@ exports.updateOrder = async (req, res) => {
     }
   };
 
-// 🔹 Fetch a particular Order (For Admin)
+// // 🔹 Fetch a particular Order (For Admin)
 
-  exports.getOrderById = async (req, res) => {
-    try {
-      const { id } = req.params;
+//   exports.getOrderById = async (req, res) => {
+//     try {
+//       const { id } = req.params;
   
-      const order = await Order.findById(id)
-        .populate("user", "name email")  // Fetch user details
-        .populate("books.book", "title price"); // Fetch book details
+//       const order = await Order.findById(id)
+//         .populate("user", "name email")  // Fetch user details
+//         .populate("books.book", "title price"); // Fetch book details
   
-      if (!order) {
-        return res.status(404).json({ message: "Order not found" });
-      }
+//       if (!order) {
+//         return res.status(404).json({ message: "Order not found" });
+//       }
   
-      res.status(200).json(order);
-    } catch (error) {
-      res.status(500).json({ message: "Server Error", error });
+//       res.status(200).json(order);
+//     } catch (error) {
+//       res.status(500).json({ message: "Server Error", error });
+//     }
+//   };
+
+
+// 🔹 Fetch a particular Order (For Admin)
+exports.getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const order = await Order.findById(id)
+      .populate("user", "name email") // User details
+      .populate("books.book", "title author price isbn"); // Book details with ISBN
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
     }
-  };
+
+    res.status(200).json(order);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
 
 
 // // 🔹 Export Orders as CSV (Admin Only)
