@@ -8,3 +8,12 @@ const storeSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Store", storeSchema);
+
+
+// name , addressm , open close time , mob no , rating , reviws , books (inventory)
+
+
+// store me school
+
+
+

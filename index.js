@@ -8,14 +8,16 @@ const userRoutes = require("./src/routes/userRoutes");
 const adminRoutes = require("./src/routes/adminRoutes"); 
 const storeRoutes = require("./src/routes/storeRoutes");
 
-const bookRoutes = require("./src/routes/bookRoutes");   // NEW
-const cartRoutes = require("./src/routes/cartRoutes");   // NEW
-const orderRoutes = require("./src/routes/orderRoutes"); // NEW
+const bookRoutes = require("./src/routes/bookRoutes");   
+const cartRoutes = require("./src/routes/cartRoutes");   
+const orderRoutes = require("./src/routes/orderRoutes"); 
 const reviewRoutes = require("./src/routes/reviewRoutes")
 
 const adminOrderRoutes = require("./src/routes/adminOrderRoutes");
 const adminBookRoutes = require("./src/routes/adminBookRoutes");
 const adminUserRoutes = require("./src/routes/adminUserRoutes");
+
+const adminSchoolRoutes = require("./src/routes/adminSchoolRoutes"); 
 
 
 dotenv.config();
@@ -44,6 +46,8 @@ app.use("/api/admin/books", adminBookRoutes);
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api/admin/users", adminUserRoutes);
+
+app.use("/api/admin/schools", adminSchoolRoutes); 
 
 
 app.get("/", (req, res) => {
