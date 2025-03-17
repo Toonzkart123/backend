@@ -66,50 +66,81 @@ exports.getStoreById = async (req, res) => {
   }
 };
 
-// 🔹 Update store details
+
+// // 🔹 Update store details
+// exports.updateStore = async (req, res) => {
+//   try {
+//     const {
+//       storeName,
+//       address,
+//       phoneNumber,
+//       email,
+//       managerName,
+//       status,
+//       website,
+//       storeHours,
+//       description,
+//       commissionRate,
+//       paymentTerms,
+//     } = req.body;
+
+//     const updatedData = {
+//       storeName,
+//       address,
+//       phoneNumber,
+//       email,
+//       managerName,
+//       status,
+//       website,
+//       storeHours,
+//       description,
+//       commissionRate,
+//       paymentTerms,
+//     };
+
+//     if (req.file) {
+//       updatedData.image = req.file.path;
+//     }
+
+//     const store = await Store.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+
+//     if (!store) return res.status(404).json({ message: "Store not found" });
+
+//     res.status(200).json({ message: "Store updated successfully", store });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server Error", error });
+//   }
+// };
+
+// 🔹 Update store details (Admin)
 exports.updateStore = async (req, res) => {
   try {
-    const {
-      storeName,
-      address,
-      phoneNumber,
-      email,
-      managerName,
-      status,
-      website,
-      storeHours,
-      description,
-      commissionRate,
-      paymentTerms,
-    } = req.body;
+    const updateData = req.body;
 
-    const updatedData = {
-      storeName,
-      address,
-      phoneNumber,
-      email,
-      managerName,
-      status,
-      website,
-      storeHours,
-      description,
-      commissionRate,
-      paymentTerms,
-    };
-
+    // Handle image update if provided
     if (req.file) {
-      updatedData.image = req.file.path;
+      updateData.image = req.file.path;
     }
 
-    const store = await Store.findByIdAndUpdate(req.params.id, updatedData, { new: true });
-
+    // Find store by ID
+    const store = await Store.findById(req.params.id);
     if (!store) return res.status(404).json({ message: "Store not found" });
+
+    // If inventory is provided, update it
+    if (updateData.inventory && Array.isArray(updateData.inventory)) {
+      store.inventory = updateData.inventory.map(item => ({ book: item.book }));
+    }
+
+    // Apply only provided fields (allow partial updates)
+    Object.assign(store, updateData);
+    await store.save();
 
     res.status(200).json({ message: "Store updated successfully", store });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
   }
 };
+
 
 // 🔹 Delete store
 exports.deleteStore = async (req, res) => {

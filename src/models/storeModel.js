@@ -16,8 +16,7 @@ const storeSchema = new mongoose.Schema({
   paymentTerms: { type: String },
 
   inventory: [{
-    book: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
-    stock: { type: Number, default: 0 }
+    book: { type: mongoose.Schema.Types.ObjectId, ref: "Book" }
   }],
 
   createdAt: { type: Date, default: Date.now },
