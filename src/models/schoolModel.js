@@ -1,3 +1,4 @@
+// src/models/School.js
 const mongoose = require("mongoose");
 
 const schoolSchema = new mongoose.Schema({
@@ -7,7 +8,6 @@ const schoolSchema = new mongoose.Schema({
     address: { type: String, required: true }
   },
   image: { type: String }, // URL or path to the uploaded image
-  stores: [{ type: mongoose.Schema.Types.ObjectId, ref: "Store" }], // Linked Stores
   createdAt: { type: Date, default: Date.now }
 });
 

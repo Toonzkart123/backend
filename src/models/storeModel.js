@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 const storeSchema = new mongoose.Schema({
   storeName: { type: String, required: true },
   address: { type: String, required: true },
@@ -12,15 +11,15 @@ const storeSchema = new mongoose.Schema({
   storeHours: { type: String },
   image: { type: String },
   description: { type: String },
-  commissionRate: { type: Number},
+  commissionRate: { type: Number },
   paymentTerms: { type: String },
 
-  inventory: [{
-    book: { type: mongoose.Schema.Types.ObjectId, ref: "Book" }
-  }],
+  // 🔹 Reference to Schools (Supports multiple schools)
+  schools: [{ type: mongoose.Schema.Types.ObjectId, ref: "School" }],
+
+  inventory: [{ book: { type: mongoose.Schema.Types.ObjectId, ref: "Book" } }],
 
   createdAt: { type: Date, default: Date.now },
 });
-
 
 module.exports = mongoose.model("Store", storeSchema);
