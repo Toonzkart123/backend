@@ -8,10 +8,12 @@ const userRoutes = require("./src/routes/userRoutes");
 const adminRoutes = require("./src/routes/adminRoutes"); 
 const storeRoutes = require("./src/routes/storeRoutes");
 
+
 const bookRoutes = require("./src/routes/bookRoutes");   
 const cartRoutes = require("./src/routes/cartRoutes");   
 const orderRoutes = require("./src/routes/orderRoutes"); 
-const reviewRoutes = require("./src/routes/reviewRoutes")
+const reviewRoutes = require("./src/routes/reviewRoutes");
+const schoolRoutes = require("./src/routes/schoolRoutes");
 
 const adminOrderRoutes = require("./src/routes/adminOrderRoutes");
 const adminBookRoutes = require("./src/routes/adminBookRoutes");
@@ -36,7 +38,9 @@ connectDB();
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/admins", adminRoutes); 
-app.use("/api/stores", storeRoutes); 
+app.use("/api/stores", storeRoutes);
+app.use("/api/schools", schoolRoutes);
+
 
 app.use("/api/books", bookRoutes);
 app.use("/api/cart", cartRoutes);
