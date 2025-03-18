@@ -25,6 +25,9 @@ const adminStoreRoutes = require("./src/routes/adminStoreRoutes");
 const bookRequestRoutes = require("./src/routes/bookRequestRoutes");
 const adminBookRequestRoutes = require("./src/routes/adminBookRequestRoutes");
 
+const promoCodeRoutes = require('./src/routes/promoCodeRoutes');
+
+
 dotenv.config();
 const app = express();
 
@@ -61,6 +64,8 @@ app.use("/api/admin/stores", adminStoreRoutes);
 
 app.use("/api/book-requests", bookRequestRoutes);
 app.use("/api/admin/book-requests", adminBookRequestRoutes);
+
+app.use('/api/promocodes', promoCodeRoutes);
 
 
 app.get("/", (req, res) => {
