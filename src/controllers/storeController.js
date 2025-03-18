@@ -63,4 +63,23 @@ const loginStore = async (req, res) => {
   }
 };
 
-module.exports = { registerStore, loginStore };
+// 🔹 Fetch stores based on School ID
+const getStoresBySchoolId = async (req, res) => {
+  try {
+    const { schoolId } = req.params;
+
+    // Find all stores linked to the given school ID
+    const stores = await Store.find({ school: schoolId });
+
+    if (stores.length === 0) {
+      return res.status(404).json({ message: "No stores found for this school." });
+    }
+
+    res.status(200).json(stores);
+  } catch (error) {
+    console.error("Error fetching stores by school ID:", error);
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
+module.exports = { registerStore, loginStore, getStoresBySchoolId };
