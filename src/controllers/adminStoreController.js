@@ -67,55 +67,6 @@ exports.getStoreById = async (req, res) => {
 };
 
 
-// // 🔹 Update store details
-// exports.updateStore = async (req, res) => {
-//   try {
-//     const {
-//       storeName,
-//       address,
-//       phoneNumber,
-//       email,
-//       managerName,
-//       status,
-//       website,
-//       storeHours,
-//       description,
-//       commissionRate,
-//       paymentTerms,
-//     } = req.body;
-
-//     const updatedData = {
-//       storeName,
-//       address,
-//       phoneNumber,
-//       email,
-//       managerName,
-//       status,
-//       website,
-//       storeHours,
-//       description,
-//       commissionRate,
-//       paymentTerms,
-//     };
-
-//     if (req.file) {
-//       updatedData.image = req.file.path;
-//     }
-
-//     const store = await Store.findByIdAndUpdate(req.params.id, updatedData, { new: true });
-
-//     if (!store) return res.status(404).json({ message: "Store not found" });
-
-//     res.status(200).json({ message: "Store updated successfully", store });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error", error });
-//   }
-// };
-
-
-
-
-
 
 
 
