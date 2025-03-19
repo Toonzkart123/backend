@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
+const BookRequest = require("../models/bookRequestModel");
 
 
 // 🔹 Admin Adds a New User
@@ -36,6 +37,8 @@ exports.addUser = async (req, res) => {
   }
 };
 
+
+
 // 🔹 Fetch All Users (Admin Only)
 exports.getAllUsers = async (req, res) => {
     try {
@@ -59,6 +62,7 @@ exports.getUserById = async (req, res) => {
     }
   };
   
+
   // 🔹 Update User Details (Admin Only)
   exports.updateUser = async (req, res) => {
     try {
@@ -92,27 +96,60 @@ exports.getUserById = async (req, res) => {
     }
   };
 
-  // 🔹 Delete a User (Admin Only)
+
+
+
+// 🔹 Delete a User (Admin Only)
 exports.deleteUser = async (req, res) => {
-    try {
-      const { id } = req.params;
+  try {
+    const { id } = req.params;
   
-      // Find the user
-      const user = await User.findById(id);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-  
-      // Prevent admin from deleting themselves
-      if (req.admin && req.admin._id.toString() === id) {
-        return res.status(403).json({ message: "You cannot delete yourself" });
-      }
-  
-      // Delete the user from the database
-      await User.findByIdAndDelete(id);
-  
-      res.status(200).json({ message: "User deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Server Error", error });
+    // Find the user
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-  };
+  
+    // Prevent admin from deleting themselves
+    if (req.admin && req.admin._id.toString() === id) {
+      return res.status(403).json({ message: "You cannot delete yourself" });
+    }
+    
+    // Find and delete all book requests associated with this user
+    await BookRequest.deleteMany({ user: id });
+    
+    // Delete the user from the database
+    await User.findByIdAndDelete(id);
+  
+    res.status(200).json({ message: "User and all associated data deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
+
+
+//   // 🔹 Delete a User (Admin Only)
+// exports.deleteUser = async (req, res) => {
+//     try {
+//       const { id } = req.params;
+  
+//       // Find the user
+//       const user = await User.findById(id);
+//       if (!user) {
+//         return res.status(404).json({ message: "User not found" });
+//       }
+  
+//       // Prevent admin from deleting themselves
+//       if (req.admin && req.admin._id.toString() === id) {
+//         return res.status(403).json({ message: "You cannot delete yourself" });
+//       }
+  
+//       // Delete the user from the database
+//       await User.findByIdAndDelete(id);
+  
+//       res.status(200).json({ message: "User deleted successfully" });
+//     } catch (error) {
+//       res.status(500).json({ message: "Server Error", error });
+//     }
+//   };

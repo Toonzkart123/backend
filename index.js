@@ -65,7 +65,7 @@ app.use("/api/admin/stores", adminStoreRoutes);
 app.use("/api/book-requests", bookRequestRoutes);
 app.use("/api/admin/book-requests", adminBookRequestRoutes);
 
-app.use('/api/promocodes', promoCodeRoutes);
+app.use('/api/admin/promocodes', promoCodeRoutes);
 
 
 app.get("/", (req, res) => {
