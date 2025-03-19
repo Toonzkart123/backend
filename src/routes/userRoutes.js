@@ -7,7 +7,11 @@ const {
     removeFromWishlist,
     clearWishlist,
     forgotPassword,
-    resetPassword
+    resetPassword, 
+    getUserProfile,
+    addAddress,
+    updateAddress,
+    deleteAddress
   } = require('../controllers/userController');
 
 
@@ -29,7 +33,20 @@ router.use(authenticateUser);
 router.get('/wishlist', getWishlist);
 router.post('/wishlist', addToWishlist);
 router.delete('/wishlist/:bookId', removeFromWishlist);
-router.delete("/", authenticateUser, clearWishlist);     // Clear wishlist
+
+
+// 🔹 Profile: Get user details
+router.get("/profile", getUserProfile);
+
+// 🔹 Addresses
+router.post("/addresses", addAddress);             // Add new address
+router.put("/addresses/:addressId", updateAddress); // Update address
+router.delete("/addresses/:addressId", deleteAddress); // Remove address
+
+router.delete("/", clearWishlist);     // Clear wishlist
+
+
+
 
 
 module.exports = router;
