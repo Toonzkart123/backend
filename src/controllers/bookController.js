@@ -85,3 +85,14 @@ exports.getAllBooks = async (req, res) => {
     res.status(500).json({ message: 'Server Error', error });
   }
 };
+
+exports.getAllBookNames = async (req, res) => {
+  try {
+    const books = await Book.find({}, "title"); // Fetch only titles
+    res.json(books);
+  } catch (error) {
+    console.error("Error fetching book names:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
