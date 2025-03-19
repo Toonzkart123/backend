@@ -1,9 +1,6 @@
 const Book = require("../models/bookModel");
 const fs = require("fs"); // Import for file deletion
 
-;
-
-
 // 🔹 Add a New Book (Admin Only)
 exports.addBook = async (req, res) => {
   try {
