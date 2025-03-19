@@ -109,14 +109,35 @@ exports.createOrder = async (req, res) => {
 
 
 
+// exports.getUserOrders = async (req, res) => {
+//   try {
+//     const orders = await Order.find({ userId: req.user._id }).sort({ createdAt: -1 });
+//     res.json(orders);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server Error', error });
+//   }
+// };
+
+
 exports.getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.user._id }).sort({ createdAt: -1 });
-    res.json(orders);
+    // Fetch all orders from the database
+    const orders = await Order.find()
+      .populate("books.book", "title price") // Populate book details
+      .sort({ createdAt: -1 });
+
+    // Filter orders where `user` matches the logged-in user's ID
+    const userOrders = orders.filter(order => order.user.toString() === req.user._id.toString());
+
+    res.status(200).json(userOrders);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    console.error(error);
+    res.status(500).json({ message: "Server Error", error });
   }
 };
+
+
+
 
 exports.getOrderById = async (req, res) => {
   try {
