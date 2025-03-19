@@ -82,4 +82,26 @@ const getStoresBySchoolId = async (req, res) => {
   }
 };
 
-module.exports = { registerStore, loginStore, getStoresBySchoolId };
+const getStoresByBookId = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+
+    if (!bookId) {
+      return res.status(400).json({ message: "Book ID is required" });
+    }
+
+    // Find stores where the given book ID is in the inventory array
+    const stores = await Store.find({ "inventory.book": bookId });
+
+    if (stores.length === 0) {
+      return res.status(404).json({ message: "No stores found for this book" });
+    }
+
+    res.json(stores);
+  } catch (error) {
+    console.error("Error fetching stores:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+module.exports = { registerStore, loginStore, getStoresBySchoolId, getStoresByBookId };
