@@ -112,10 +112,50 @@ exports.getStoreById = async (req, res) => {
 //   }
 // };
 
+
+
+
+
+
+
+
+// // 🔹 Update store details (Admin)
+// exports.updateStore = async (req, res) => {
+//   try {
+//     const updateData = req.body;
+
+//     // Handle image update if provided
+//     if (req.file) {
+//       updateData.image = req.file.path;
+//     }
+
+//     // Find store by ID
+//     const store = await Store.findById(req.params.id);
+//     if (!store) return res.status(404).json({ message: "Store not found" });
+
+//     // If inventory is provided, update it
+//     if (updateData.inventory && Array.isArray(updateData.inventory)) {
+//       store.inventory = updateData.inventory.map(item => ({ book: item.book }));
+//     }
+
+//     // Apply only provided fields (allow partial updates)
+//     Object.assign(store, updateData);
+//     await store.save();
+
+//     res.status(200).json({ message: "Store updated successfully", store });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server Error", error });
+//   }
+// };
+
+
+
+
+
 // 🔹 Update store details (Admin)
 exports.updateStore = async (req, res) => {
   try {
-    const updateData = req.body;
+    const updateData = { ...req.body };
 
     // Handle image update if provided
     if (req.file) {
@@ -124,15 +164,24 @@ exports.updateStore = async (req, res) => {
 
     // Find store by ID
     const store = await Store.findById(req.params.id);
-    if (!store) return res.status(404).json({ message: "Store not found" });
-
-    // If inventory is provided, update it
-    if (updateData.inventory && Array.isArray(updateData.inventory)) {
-      store.inventory = updateData.inventory.map(item => ({ book: item.book }));
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
     }
 
-    // Apply only provided fields (allow partial updates)
+    // If inventory is provided, append items instead of overwriting
+    if (updateData.inventory && Array.isArray(updateData.inventory)) {
+      const newItems = updateData.inventory.map(item => ({ book: item.book }));
+      // Append to existing array
+      store.inventory.push(...newItems);
+
+      // Remove 'inventory' from updateData so it won't overwrite
+      delete updateData.inventory;
+    }
+
+    // Apply only provided fields (allow partial updates) 
+    // - This will update all other fields except 'inventory' which we already handled.
     Object.assign(store, updateData);
+
     await store.save();
 
     res.status(200).json({ message: "Store updated successfully", store });
@@ -140,6 +189,18 @@ exports.updateStore = async (req, res) => {
     res.status(500).json({ message: "Server Error", error });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // 🔹 Delete store
