@@ -12,6 +12,6 @@ router.post("/login", loginStore);
 
 
 // Fetch stores by school ID
-router.get("/school/:schoolId", authenticateUser, getStoresBySchoolId);
+router.get("/school/:schoolId", getStoresBySchoolId);
 
 module.exports = router;
