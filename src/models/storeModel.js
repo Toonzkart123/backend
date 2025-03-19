@@ -17,7 +17,14 @@ const storeSchema = new mongoose.Schema({
   // 🔹 Reference to Schools (Supports multiple schools)
   schools: [{ type: mongoose.Schema.Types.ObjectId, ref: "School" }],
 
-  inventory: [{ book: { type: mongoose.Schema.Types.ObjectId, ref: "Book" } }],
+  // 🔹 Updated Inventory Schema
+  inventory: [
+    {
+      book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true }, // Book ID
+      price: { type: Number, required: true }, // Store-specific price
+      quantity: { type: Number, required: true, default: 0 }, // Available stock
+    }
+  ],
 
   createdAt: { type: Date, default: Date.now },
 });
