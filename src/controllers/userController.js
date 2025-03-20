@@ -2,7 +2,8 @@ const User = require("../models/userModel");
 const Wishlist = require("../models/whishlistModel")
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+const sendEmail = require("../utils/sendEmail"); // Import the email helper
+
 
 // Register User (Signup)
 const registerUser = async (req, res) => {
@@ -65,6 +66,7 @@ const loginUser = async (req, res) => {
   }
 };
 
+
 // Transporter for sending emails
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -74,53 +76,75 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Forgot Password
+// Forgot Password: Generate a reset token, save it on the user, and send a reset email
 const forgotPassword = async (req, res) => {
-  const { email } = req.body;
   try {
+    const { email } = req.body;
+
+    // Find user by email
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const token = jwt.sign({ id: user._id }, process.env.RESET_PASSWORD_SECRET, { expiresIn: "1h" });
+    // Generate a reset token using crypto
+    const resetToken = crypto.randomBytes(20).toString("hex");
 
-    const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`; 
+    // Set token and expiration (1 hour expiry)
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour in milliseconds
 
-    await transporter.sendMail({
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`
-    });
-
-    res.status(200).json({ message: "Password reset link sent successfully." });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
-  }
-};
-
-// Reset Password
-const resetPassword = async (req, res) => {
-  const { token } = req.params;
-  const { password } = req.body;
-
-  try {
-    const decoded = jwt.verify(token, process.env.RESET_PASSWORD_SECRET);
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "Invalid or expired token." });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
     await user.save();
 
-    res.status(200).json({ message: "Password reset successfully." });
+    // Construct the reset URL using the CLIENT_URL from your .env file
+    const resetUrl = `https://consumer-omega.vercel.app/reset-password/${resetToken}`;
+    
+    const message = `Click the link to reset  your password: ${resetUrl}`;
+
+    // Send the reset email using the sendEmail helper
+    await sendEmail(user.email, "Password Reset", message);
+
+    res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
-    res.status(500).json({ message: "Invalid or expired token." });
+    console.error("Error in forgotPassword:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// Reset Password: Verify token, update the password, and clear the token fields
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    // Find a user with the given token that hasn't expired
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    // Update the password (assumes that any pre-save hooks for hashing are in place)
+    user.password = newPassword;
+
+    // Clear the reset token fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // Save the user. Using validateBeforeSave: false to avoid unnecessary validations (if needed)
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
 
 const getWishlist = async (req, res) => {
   try {
@@ -185,8 +209,6 @@ const clearWishlist = async (req, res) => {
     res.status(500).json({ message: "Server Error", error });
   }
 };
-
-
 
 
 

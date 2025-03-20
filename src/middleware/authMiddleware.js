@@ -50,6 +50,7 @@ const authenticateAdmin = async (req, res, next) => {
   }
 };
 
+
 // Middleware to verify Store authentication
 const authenticateStore = async (req, res, next) => {
   try {

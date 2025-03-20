@@ -23,9 +23,7 @@ router.post("/register", registerUser);
 // User Login
 router.post("/login", loginUser);
 
-//Password reset Logic
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+
 
 // Wishlist operations
 router.use(authenticateUser);
@@ -34,6 +32,9 @@ router.get('/wishlist', getWishlist);
 router.post('/wishlist', addToWishlist);
 router.delete('/wishlist/:bookId', removeFromWishlist);
 
+//Password reset Logic
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
 // 🔹 Profile: Get user details
 router.get("/profile", getUserProfile);

@@ -20,6 +20,8 @@ const userSchema = new mongoose.Schema({
   phone: { type: String }, // New Field (Optional)
   status: { type: String, enum: ["Active", "Inactive"], default: "Active" }, // New Field
   password: { type: String, required: true },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   addresses: [addressSchema],
   role: { type: String, enum: ["user", "admin", "store"], default: "user" },
   profilePicture: { type: String },
