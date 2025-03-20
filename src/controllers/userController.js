@@ -3,9 +3,11 @@ const Wishlist = require("../models/whishlistModel")
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail"); // Import the email helper
+const crypto = require("crypto");
 
 
 // Register User (Signup)
+
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -67,30 +69,38 @@ const loginUser = async (req, res) => {
 };
 
 
-// Forgot Password: Generate a reset token, save it on the user, and send a reset email
+
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log("Forgot Password Request for email:", normalizedEmail);
 
     // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      console.error("User not found with email:", normalizedEmail);
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // Generate a reset token using crypto
+    // Generate reset token using crypto
     const resetToken = crypto.randomBytes(20).toString("hex");
 
-    // Set token and expiration (1 hour expiry)
+    // Set token and expiration (1 hour)
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour in milliseconds
 
-    await user.save();
+    // Save user without running full validations (to bypass missing password validation)
+    await user.save({ validateBeforeSave: false });
 
-    // Construct the reset URL using the CLIENT_URL from your .env file
+    // Construct reset URL using your CLIENT_URL
     const resetUrl = `https://consumer-omega.vercel.app/reset-password/${resetToken}`;
-    
-    const message = `Click the link to reset  your password: ${resetUrl}`;
+    const message = `Click the link to reset your password: ${resetUrl}`;
 
-    // Send the reset email using the sendEmail helper
+    // Send the reset email using your sendEmail helper
     await sendEmail(user.email, "Password Reset", message);
 
     res.status(200).json({ message: "Password reset email sent" });
@@ -100,14 +110,47 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// Reset Password: Verify token, update password, and clear token fields
+// const resetPassword = async (req, res) => {
+//   try {
+//     const { token } = req.params;
+//     const { newPassword } = req.body;
 
-// Reset Password: Verify token, update the password, and clear the token fields
+//     // Find user with valid reset token that hasn't expired
+//     const user = await User.findOne({
+//       resetPasswordToken: token,
+//       resetPasswordExpires: { $gt: Date.now() }
+//     });
+
+//     if (!user) {
+//       return res.status(400).json({ message: "Invalid or expired token" });
+//     }
+
+//     // Update the password (assuming any pre-save hooks for hashing are in place)
+//     user.password = newPassword;
+
+//     // Clear reset token fields
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
+
+//     // Save the user, bypassing validation to avoid double hashing issues
+//     await user.save({ validateBeforeSave: false });
+
+//     return res.status(200).json({ message: "Password reset successful" });
+//   } catch (error) {
+//     console.error("Error in resetPassword:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
+
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { newPassword } = req.body;
 
-    // Find a user with the given token that hasn't expired
+    // Find user with valid reset token
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() },
@@ -117,15 +160,16 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    // Update the password (assumes that any pre-save hooks for hashing are in place)
-    user.password = newPassword;
+    // Manually hash the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
 
-    // Clear the reset token fields
+    // Clear reset token fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
-    // Save the user. Using validateBeforeSave: false to avoid unnecessary validations (if needed)
-    await user.save({ validateBeforeSave: false });
+    // Save user without bypassing validation since we've already hashed the password
+    await user.save();
 
     return res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
