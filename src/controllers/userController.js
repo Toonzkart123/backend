@@ -110,35 +110,75 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// const resetPassword = async (req, res) => {
+//   try {
+//     const { token } = req.params;
+//     const { newPassword } = req.body;
+
+//     // Find user with valid reset token
+//     const user = await User.findOne({
+//       resetPasswordToken: token,
+//       resetPasswordExpires: { $gt: Date.now() },
+//     });
+
+//     if (!user) {
+//       return res.status(400).json({ message: "Invalid or expired token" });
+//     }
+
+//     // Manually hash the new password
+//     const salt = await bcrypt.genSalt(10);
+//     user.password = await bcrypt.hash(newPassword, salt);
+
+//     // Clear reset token fields
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
+
+//     // Save user without bypassing validation since we've already hashed the password
+//     await user.save();
+
+//     return res.status(200).json({ message: "Password reset successful" });
+//   } catch (error) {
+//     console.error("Error resetting password:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
-    const { newPassword } = req.body;
+    // Use the field "password" as sent by your frontend
+    const { password } = req.body; 
 
-    // Find user with valid reset token
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
+    // Find a user with a valid reset token that hasn't expired
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
+      resetPasswordExpires: { $gt: Date.now() }
     });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    // Manually hash the new password
+    // Hash the new password manually
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    user.password = hashedPassword;
 
     // Clear reset token fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
-    // Save user without bypassing validation since we've already hashed the password
+    // Save the updated user
     await user.save();
 
     return res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
-    console.error("Error resetting password:", error);
+    console.error("Error in resetPassword:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
