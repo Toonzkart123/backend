@@ -110,41 +110,6 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Reset Password: Verify token, update password, and clear token fields
-// const resetPassword = async (req, res) => {
-//   try {
-//     const { token } = req.params;
-//     const { newPassword } = req.body;
-
-//     // Find user with valid reset token that hasn't expired
-//     const user = await User.findOne({
-//       resetPasswordToken: token,
-//       resetPasswordExpires: { $gt: Date.now() }
-//     });
-
-//     if (!user) {
-//       return res.status(400).json({ message: "Invalid or expired token" });
-//     }
-
-//     // Update the password (assuming any pre-save hooks for hashing are in place)
-//     user.password = newPassword;
-
-//     // Clear reset token fields
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpires = undefined;
-
-//     // Save the user, bypassing validation to avoid double hashing issues
-//     await user.save({ validateBeforeSave: false });
-
-//     return res.status(200).json({ message: "Password reset successful" });
-//   } catch (error) {
-//     console.error("Error in resetPassword:", error);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-
-
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -177,7 +142,6 @@ const resetPassword = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 
 
 
