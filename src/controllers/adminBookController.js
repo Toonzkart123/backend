@@ -120,10 +120,12 @@ exports.updateBook = async (req, res) => {
       const parsedPages = parseInt(pages);
   
       // Handle Image Upload (If a new file is uploaded)
-      if (req.file) {
-        book.image = `/uploads/${req.file.filename}`;
-      }
+      // if (req.file) {
+      //   book.image = `/uploads/${req.file.filename}`;
+      // }
   
+      book.image = req.file.path; // Cloudinary URL
+
       // Update fields
       book.title = title || book.title;
       book.author = author || book.author;
