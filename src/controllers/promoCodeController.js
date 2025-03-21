@@ -146,3 +146,27 @@ exports.deletePromoCode = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error', error });
   }
 };
+
+
+// VALIDATE
+
+exports.validatePromoCode = async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ message: 'Promo code is required.' });
+
+    const promo = await PromoCode.findOne({ code: code.trim(), isActive: true });
+    if (!promo) {
+      return res.status(404).json({ message: 'Promo code not found or inactive.' });
+    }
+
+    return res.status(200).json({
+      message: 'Promo code applied successfully.',
+      discountType: promo.discountType,
+      discountValue: promo.discountValue
+    });
+  } catch (error) {
+    console.error('Error validating promo code:', error);
+    return res.status(500).json({ message: 'Server error', error });
+  }
+};
