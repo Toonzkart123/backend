@@ -114,7 +114,6 @@ exports.updateStore = async (req, res) => {
 
 
 
-
 exports.addBookToStoreInventory = async (req, res) => {
   try {
     const { storeId } = req.params;
@@ -186,6 +185,9 @@ exports.addBookToStoreInventory = async (req, res) => {
     // ─────────────────────────────────────────────────────────────
     // 4. If the Book does not exist, create it in the global inventory
     // ─────────────────────────────────────────────────────────────
+    // Use Multer file upload if available. If req.file exists, use its filename.
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : (image || null);
+
     if (!book) {
       book = new Book({
         title,
@@ -195,7 +197,7 @@ exports.addBookToStoreInventory = async (req, res) => {
         price: parsedPrice,             // Global price (optional concept)
         stock: parsedStock,             // Global stock
         description: description || "",
-        image: image || null,
+        image: imageUrl,
         originalPrice: parsedOriginalPrice,
         discount: parsedDiscount,
         status: status || "In Stock",   // If not provided, default to "In Stock"
@@ -238,7 +240,6 @@ exports.addBookToStoreInventory = async (req, res) => {
 
     await store.save();
 
-  
     return res.status(200).json({
       message: "Book added/updated in store inventory successfully",
       store,
@@ -248,6 +249,147 @@ exports.addBookToStoreInventory = async (req, res) => {
     return res.status(500).json({ message: "Server Error", error });
   }
 };
+
+
+
+
+
+
+
+
+// exports.addBookToStoreInventory = async (req, res) => {
+//   try {
+//     const { storeId } = req.params;
+//     const {
+//       // Required fields
+//       title,
+//       author,
+//       isbn,
+//       category,
+//       price,
+//       stock,
+//       quantity,
+
+//       // Optional fields
+//       originalPrice,
+//       discount,
+//       status,
+//       publisher,
+//       publishDate,
+//       language,
+//       pages,
+//       description,
+//       image
+//     } = req.body;
+
+//     // ─────────────────────────────────────────────────────────────
+//     // 1. Parse numeric fields
+//     // ─────────────────────────────────────────────────────────────
+//     const parsedPrice = parseFloat(price);
+//     const parsedStock = parseInt(stock, 10);
+//     const parsedQuantity = parseInt(quantity, 10);
+//     const parsedOriginalPrice = originalPrice ? parseFloat(originalPrice) : null;
+//     const parsedDiscount = discount ? parseFloat(discount) : 0;
+//     const parsedPages = pages ? parseInt(pages, 10) : 0;
+
+//     // Parse publish date if provided
+//     let parsedPublishDate = null;
+//     if (publishDate) {
+//       parsedPublishDate = new Date(publishDate);
+//       if (isNaN(parsedPublishDate)) {
+//         return res.status(400).json({
+//           message: "Invalid publishDate format. Use YYYY-MM-DD or a valid date string.",
+//         });
+//       }
+//     }
+
+//     // ─────────────────────────────────────────────────────────────
+//     // 2. Validate required fields
+//     // ─────────────────────────────────────────────────────────────
+//     if (
+//       !title ||
+//       !author ||
+//       !isbn ||
+//       !category ||
+//       isNaN(parsedPrice) ||
+//       isNaN(parsedStock) ||
+//       isNaN(parsedQuantity)
+//     ) {
+//       return res.status(400).json({
+//         message: "Please provide Title, Author, ISBN, Category, Price, Stock, and Quantity correctly.",
+//       });
+//     }
+
+//     // ─────────────────────────────────────────────────────────────
+//     // 3. Check if the Book already exists in the global inventory
+//     // ─────────────────────────────────────────────────────────────
+//     let book = await Book.findOne({ isbn });
+
+//     // ─────────────────────────────────────────────────────────────
+//     // 4. If the Book does not exist, create it in the global inventory
+//     // ─────────────────────────────────────────────────────────────
+//     if (!book) {
+//       book = new Book({
+//         title,
+//         author,
+//         isbn,
+//         category,
+//         price: parsedPrice,             // Global price (optional concept)
+//         stock: parsedStock,             // Global stock
+//         description: description || "",
+//         image: image || null,
+//         originalPrice: parsedOriginalPrice,
+//         discount: parsedDiscount,
+//         status: status || "In Stock",   // If not provided, default to "In Stock"
+//         publisher: publisher || "",
+//         publishDate: parsedPublishDate,
+//         language: language || "English",
+//         pages: parsedPages
+//       });
+
+//       await book.save();
+//     }
+
+//     // ─────────────────────────────────────────────────────────────
+//     // 5. Find the Store by storeId
+//     // ─────────────────────────────────────────────────────────────
+//     const store = await Store.findById(storeId);
+//     if (!store) {
+//       return res.status(404).json({ message: "Store not found" });
+//     }
+
+//     // ─────────────────────────────────────────────────────────────
+//     // 6. Check if this Book is already in the store's inventory
+//     // ─────────────────────────────────────────────────────────────
+//     const existingItem = store.inventory.find(
+//       (item) => item.book.toString() === book._id.toString()
+//     );
+
+//     if (existingItem) {
+//       // If it exists, update the store-specific price and increment quantity
+//       existingItem.price = parsedPrice;
+//       existingItem.quantity += parsedQuantity;
+//     } else {
+//       // Otherwise, add a new entry to the store's inventory
+//       store.inventory.push({
+//         book: book._id,
+//         price: parsedPrice,
+//         quantity: parsedQuantity,
+//       });
+//     }
+
+//     await store.save();
+
+  
+//     return res.status(200).json({
+//       message: "Book added/updated in store inventory successfully",
+//       store,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Server Error", error });
+//   }
+// };
 
 
 //update a book from store
