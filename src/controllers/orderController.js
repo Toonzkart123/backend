@@ -169,7 +169,7 @@ exports.getUserOrders = async (req, res) => {
   try {
     // Fetch all orders from the database
     const orders = await Order.find()
-      .populate("books.book", "title price") // Populate book details
+      .populate("items.item", "price") // Populate book details
       .sort({ createdAt: -1 });
 
     // Filter orders where `user` matches the logged-in user's ID
