@@ -1,84 +1,93 @@
 // controllers/cartController.js
 const Cart = require('../models/cartModel');
 const Book = require('../models/bookModel');
+const Stationery = require('../models/stationeryModel');
 
-// GET user cart
-exports.getCart = async (req, res) => {
-  try {
-    const cart = await Cart.findOne({ userId: req.user._id }).populate('items.bookId');
-    if (!cart) {
-      return res.json({ items: [] });
-    }
-    res.json(cart);
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
-  }
-};
-
-// ADD item to cart
+// Add item to cart
 exports.addToCart = async (req, res) => {
   try {
-    const { bookId, quantity } = req.body;
-    let cart = await Cart.findOne({ userId: req.user._id });
+    const { category, productId, quantity } = req.body;
 
+    if (!['Book', 'Stationery'].includes(category)) {
+      return res.status(400).json({ message: 'Invalid category type.' });
+    }
+
+    let cart = await Cart.findOne({ userId: req.user._id });
     if (!cart) {
       cart = new Cart({ userId: req.user._id, items: [] });
     }
 
-    const itemIndex = cart.items.findIndex(item => item.bookId.toString() === bookId);
+    const existingItemIndex = cart.items.findIndex(
+      item => item.productId.toString() === productId && item.category === category
+    );
 
-    if (itemIndex > -1) {
-      // Update quantity if item already exists
-      cart.items[itemIndex].quantity += quantity || 1;
+    if (existingItemIndex > -1) {
+      cart.items[existingItemIndex].quantity += quantity || 1;
     } else {
-      // Push new item
-      cart.items.push({ bookId, quantity: quantity || 1 });
+      cart.items.push({ category, productId, quantity: quantity || 1 });
     }
 
     await cart.save();
     res.json(cart);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    res.status(500).json({ message: 'Server error', error });
   }
 };
 
-// UPDATE cart item quantity
+// Get user cart
+exports.getCart = async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.user._id })
+      .populate({
+        path: 'items.productId',
+        strictPopulate: false // Important when using refPath
+      });
+
+    if (!cart) return res.json({ items: [] });
+    res.json(cart);
+  } catch (error) {
+    console.error('GET CART ERROR:', error);
+    res.status(500).json({ message: 'Server error', error });
+    console.error('GET CART ERROR:', JSON.stringify(error, null, 2));
+  }
+};
+
+// Update cart item quantity
 exports.updateCartItem = async (req, res) => {
   try {
     const { itemId } = req.params;
     const { quantity } = req.body;
 
-    let cart = await Cart.findOne({ userId: req.user._id });
+    const cart = await Cart.findOne({ userId: req.user._id });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
-    const itemIndex = cart.items.findIndex(item => item._id.toString() === itemId);
-    if (itemIndex === -1) return res.status(404).json({ message: 'Item not found in cart' });
+    const item = cart.items.id(itemId);
+    if (!item) return res.status(404).json({ message: 'Item not found' });
 
-    cart.items[itemIndex].quantity = quantity;
+    item.quantity = quantity;
     await cart.save();
     res.json(cart);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    res.status(500).json({ message: 'Server error', error });
   }
 };
 
-// REMOVE item from cart
+// Remove item from cart
 exports.removeFromCart = async (req, res) => {
   try {
     const { itemId } = req.params;
-    let cart = await Cart.findOne({ userId: req.user._id });
-
+    const cart = await Cart.findOne({ userId: req.user._id });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
-    
+
     cart.items = cart.items.filter(item => item._id.toString() !== itemId);
     await cart.save();
     res.json(cart);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    res.status(500).json({ message: 'Server error', error });
   }
 };
 
-// CLEAR entire cart
+// Clear cart
 exports.clearCart = async (req, res) => {
   try {
     const cart = await Cart.findOne({ userId: req.user._id });
@@ -88,6 +97,6 @@ exports.clearCart = async (req, res) => {
     await cart.save();
     res.json({ message: 'Cart cleared successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    res.status(500).json({ message: 'Server error', error });
   }
 };
