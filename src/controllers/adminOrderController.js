@@ -5,66 +5,142 @@ const path = require("path");
 const fastCsv = require("fast-csv");
 
 
+// // 🔹 Fetch All Orders (For Admin)
+// exports.getAllOrders = async (req, res) => {
+//     try {
+//       const orders = await Order.find()
+//         .populate("user", "name email") // Fetch user details
+//         .populate("books.book", "title price") // Fetch book details
+//         .sort({ createdAt: -1 }); // Sort by latest orders first
+  
+//       res.status(200).json(orders);
+//     } catch (error) {
+//       res.status(500).json({ message: "Server Error", error });
+//     }
+//   };
+
+
+
 // 🔹 Fetch All Orders (For Admin)
 exports.getAllOrders = async (req, res) => {
-    try {
-      const orders = await Order.find()
-        .populate("user", "name email") // Fetch user details
-        .populate("books.book", "title price") // Fetch book details
-        .sort({ createdAt: -1 }); // Sort by latest orders first
+  try {
+    const orders = await Order.find()
+      .populate("user", "name email") // Fetch user details
+      .populate("items.productId", "title price") // Fetch product details from the correct model based on category
+      .sort({ createdAt: -1 }); // Sort by latest orders first
+
+    res.status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
+
+
+// // 🔹 Update Order Status (For Admin)
+// exports.updateOrder = async (req, res) => {
+//     try {
+//       const { status, totalAmount, books } = req.body;
+//       const { id } = req.params;
   
-      res.status(200).json(orders);
-    } catch (error) {
-      res.status(500).json({ message: "Server Error", error });
-    }
-  };
+//       let order = await Order.findById(id);
+//       if (!order) {
+//         return res.status(404).json({ message: "Order not found" });
+//       }
+  
+//       // ✅ Update Order Status
+//       if (status) {
+//         const validStatuses = ["Pending", "Shipped", "Delivered", "Cancelled"];
+//         if (!validStatuses.includes(status)) {
+//           return res.status(400).json({ message: "Invalid status value" });
+//         }
+//         order.status = status;
+//       }
+  
+      
+//       // ✅ Update Total Amount
+//       if (totalAmount !== undefined) {
+//         if (isNaN(totalAmount) || totalAmount < 0) {
+//           return res.status(400).json({ message: "Total amount must be a valid number" });
+//         }
+//         order.totalAmount = totalAmount;
+//       }
+  
+//       // ✅ Update Books in Order
+//       if (books) {
+//         if (!Array.isArray(books) || books.length === 0) {
+//           return res.status(400).json({ message: "Books must be a non-empty array" });
+//         }
+//         order.books = books;
+//       }
+  
+//       // ✅ Save the updated order
+//       await order.save();
+  
+//       res.status(200).json({ message: "Order updated successfully", order });
+//     } catch (error) {
+//       res.status(500).json({ message: "Server Error", error });
+//     }
+//   };
 
 
 // 🔹 Update Order Status (For Admin)
 exports.updateOrder = async (req, res) => {
-    try {
-      const { status, totalAmount, books } = req.body;
-      const { id } = req.params;
-  
-      let order = await Order.findById(id);
-      if (!order) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-  
-      // ✅ Update Order Status
-      if (status) {
-        const validStatuses = ["Pending", "Shipped", "Delivered", "Cancelled"];
-        if (!validStatuses.includes(status)) {
-          return res.status(400).json({ message: "Invalid status value" });
-        }
-        order.status = status;
-      }
-  
-      
-      // ✅ Update Total Amount
-      if (totalAmount !== undefined) {
-        if (isNaN(totalAmount) || totalAmount < 0) {
-          return res.status(400).json({ message: "Total amount must be a valid number" });
-        }
-        order.totalAmount = totalAmount;
-      }
-  
-      // ✅ Update Books in Order
-      if (books) {
-        if (!Array.isArray(books) || books.length === 0) {
-          return res.status(400).json({ message: "Books must be a non-empty array" });
-        }
-        order.books = books;
-      }
-  
-      // ✅ Save the updated order
-      await order.save();
-  
-      res.status(200).json({ message: "Order updated successfully", order });
-    } catch (error) {
-      res.status(500).json({ message: "Server Error", error });
+  try {
+    // Update: Change 'books' to 'items' in the request body destructuring
+    const { status, totalAmount, items } = req.body;
+    const { id } = req.params;
+
+    let order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
     }
-  };
+
+    // ✅ Update Order Status with updated valid statuses
+    if (status) {
+      const validStatuses = [
+        "Pending",
+        "Processing",
+        "Shipped",
+        "Completed",
+        "Cancelled",
+        "Returned"
+      ];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      order.status = status;
+    }
+
+    // ✅ Update Total Amount
+    if (totalAmount !== undefined) {
+      if (isNaN(totalAmount) || totalAmount < 0) {
+        return res.status(400).json({ message: "Total amount must be a valid number" });
+      }
+      order.totalAmount = totalAmount;
+    }
+
+    // ✅ Update Items in Order (previously 'books')
+    if (items) {
+      if (!Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: "Items must be a non-empty array" });
+      }
+      order.items = items;
+    }
+
+    // ✅ Save the updated order
+    await order.save();
+
+    res.status(200).json({ message: "Order updated successfully", order });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
+
+
+
+
 
 // // 🔹 Fetch a particular Order (For Admin)
 
@@ -87,6 +163,28 @@ exports.updateOrder = async (req, res) => {
 //   };
 
 
+// // 🔹 Fetch a particular Order (For Admin)
+// exports.getOrderById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const order = await Order.findById(id)
+//       .populate("user", "name email") // User details
+//       .populate("books.book", "title author price isbn"); // Book details with ISBN
+
+//     if (!order) {
+//       return res.status(404).json({ message: "Order not found" });
+//     }
+
+//     res.status(200).json(order);
+//   } catch (error) {
+//     res.status(500).json({ message: "Server Error", error });
+//   }
+// };
+
+
+
+
 // 🔹 Fetch a particular Order (For Admin)
 exports.getOrderById = async (req, res) => {
   try {
@@ -94,7 +192,7 @@ exports.getOrderById = async (req, res) => {
 
     const order = await Order.findById(id)
       .populate("user", "name email") // User details
-      .populate("books.book", "title author price isbn"); // Book details with ISBN
+      .populate("items.productId", "title author price isbn"); // Fetch product details (Book/Stationery) based on category
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -105,6 +203,9 @@ exports.getOrderById = async (req, res) => {
     res.status(500).json({ message: "Server Error", error });
   }
 };
+
+
+
 
 
 
