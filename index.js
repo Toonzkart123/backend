@@ -58,7 +58,8 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 
 app.use("/api/admin/books", adminBookRoutes);
-app.use("/uploads", express.static("uploads"));
+
+// app.use("/uploads", express.static("uploads"));
 
 app.use("/api/admin/users", adminUserRoutes);
 

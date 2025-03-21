@@ -34,9 +34,18 @@ exports.addBook = async (req, res) => {
       return res.status(400).json({ message: "Please provide all required fields correctly." });
     }
 
-    // Handle Image Upload (If file is uploaded)
-    let imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    // Check if a book with the same ISBN already exists
+    const existingBook = await Book.findOne({ isbn });
+    if (existingBook) {
+      return res.status(400).json({ message: "ISBN already exists. Please provide a unique ISBN." });
+    }
 
+    // Handle Image Upload (If file is uploaded)
+    // let imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+
+    // Using Cloudinary, the image URL is stored in req.file.path
+    let imageUrl = req.file ? req.file.path : null;
     
 
     const newBook = new Book({
