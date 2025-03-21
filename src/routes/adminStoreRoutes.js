@@ -5,6 +5,7 @@ const {
   getStoreById,
   updateStore,
   deleteStore,
+  addBookToStoreInventory
 } = require("../controllers/adminStoreController");
 const { authenticateAdmin } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
@@ -25,5 +26,8 @@ router.put("/:id", authenticateAdmin, upload.single("image"), updateStore);
 
 // 🔹 Delete store
 router.delete("/:id", authenticateAdmin, deleteStore);
+
+router.post("/:storeId/inventory", authenticateAdmin, addBookToStoreInventory);
+
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const Store = require("../models/storeModel");
+const Book = require("../models/bookModel");
 
 // 🔹 Add new store
 exports.addStore = async (req, res) => {
@@ -66,42 +67,17 @@ exports.getStoreById = async (req, res) => {
   }
 };
 
+// 🔹 Delete store
+exports.deleteStore = async (req, res) => {
+  try {
+    const store = await Store.findByIdAndDelete(req.params.id);
+    if (!store) return res.status(404).json({ message: "Store not found" });
 
-
-
-
-// // 🔹 Update store details (Admin)
-// exports.updateStore = async (req, res) => {
-//   try {
-//     const updateData = req.body;
-
-//     // Handle image update if provided
-//     if (req.file) {
-//       updateData.image = req.file.path;
-//     }
-
-//     // Find store by ID
-//     const store = await Store.findById(req.params.id);
-//     if (!store) return res.status(404).json({ message: "Store not found" });
-
-//     // If inventory is provided, update it
-//     if (updateData.inventory && Array.isArray(updateData.inventory)) {
-//       store.inventory = updateData.inventory.map(item => ({ book: item.book }));
-//     }
-
-//     // Apply only provided fields (allow partial updates)
-//     Object.assign(store, updateData);
-//     await store.save();
-
-//     res.status(200).json({ message: "Store updated successfully", store });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error", error });
-//   }
-// };
-
-
-
-
+    res.status(200).json({ message: "Store deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
 
 // 🔹 Update store details (Admin)
 exports.updateStore = async (req, res) => {
@@ -144,6 +120,76 @@ exports.updateStore = async (req, res) => {
 
 
 
+// 🔹 Add a Book in a Store’s Inventory
+
+// exports.addBookToStoreInventory = async (req, res) => {
+//   try {
+//     const { storeId } = req.params;
+//     const {
+//       isbn,
+//       title,
+//       author,
+//       category,
+//       description,
+//       price,
+//       quantity,
+//       // Add any additional fields if needed
+//     } = req.body;
+
+//     // 1. Check if the Book already exists in the global inventory by ISBN
+//     let book = await Book.findOne({ isbn });
+
+//     // 2. If not, create a new Book in the global inventory
+//     if (!book) {
+//       book = new Book({
+//         isbn,
+//         title,
+//         author,
+//         category,
+//         description,
+//         price: parseFloat(price) || 0,  // optional "global" price
+//         stock: parseInt(quantity) || 0, // if you want to track global stock
+//         // ... other fields from req.body if needed
+//       });
+//       await book.save();
+//     }
+
+//     // 3. Find the Store
+//     const store = await Store.findById(storeId);
+//     if (!store) {
+//       return res.status(404).json({ message: "Store not found" });
+//     }
+
+//     // 4. Check if this Book is already in the store's inventory
+//     const existingItem = store.inventory.find(
+//       (item) => item.book.toString() === book._id.toString()
+//     );
+
+//     if (existingItem) {
+//       // If the Book already exists, update price/quantity
+//       existingItem.price = parseFloat(price);
+//       existingItem.quantity += parseInt(quantity, 10);
+//     } else {
+//       // Otherwise, push a new item
+//       store.inventory.push({
+//         book: book._id,
+//         price: parseFloat(price),
+//         quantity: parseInt(quantity, 10),
+//       });
+//     }
+
+//     // 5. Save the Store
+//     await store.save();
+
+//     return res.status(200).json({
+//       message: "Book added/updated in store inventory successfully",
+//       store,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Server Error", error });
+//   }
+// };
 
 
 
@@ -151,17 +197,100 @@ exports.updateStore = async (req, res) => {
 
 
 
-
-
-
-// 🔹 Delete store
-exports.deleteStore = async (req, res) => {
+exports.addBookToStoreInventory = async (req, res) => {
   try {
-    const store = await Store.findByIdAndDelete(req.params.id);
-    if (!store) return res.status(404).json({ message: "Store not found" });
+    const { storeId } = req.params;
+    const {
+      title,
+      author,
+      isbn,
+      category,
+      description,
+      price,
+      originalPrice,
+      discount,
+      stock,
+      status,
+      publisher,
+      publishDate,
+      language,
+      pages,
+      quantity, // store-specific quantity
+    } = req.body;
 
-    res.status(200).json({ message: "Store deleted successfully" });
+    // Convert numeric fields from strings if necessary
+    const parsedPrice = parseFloat(price);
+    const parsedOriginalPrice = parseFloat(originalPrice);
+    const parsedDiscount = parseFloat(discount);
+    const parsedStock = parseInt(stock, 10);
+    const parsedPages = parseInt(pages, 10);
+    const parsedQuantity = parseInt(quantity, 10);
+
+    // Validate required fields (as in your global addBook)
+    if (!title || !author || !isbn || isNaN(parsedPrice) || isNaN(parsedStock) || !category) {
+      return res.status(400).json({ message: "Please provide all required fields correctly." });
+    }
+
+    // 1. Check if the Book already exists in the global inventory by ISBN
+    let book = await Book.findOne({ isbn });
+
+    // 2. If not, create a new Book in the global inventory with the provided fields
+    if (!book) {
+      let imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+      book = new Book({
+        title,
+        author,
+        isbn,
+        category,
+        description,
+        price: parsedPrice,
+        originalPrice: parsedOriginalPrice || null,
+        discount: parsedDiscount || 0,
+        stock: parsedStock,
+        status,
+        publisher,
+        publishDate: publishDate ? new Date(publishDate) : null,
+        language,
+        pages: parsedPages || 0,
+        image: imageUrl,
+      });
+      await book.save();
+    }
+
+    // 3. Find the Store
+    const store = await Store.findById(storeId);
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
+    // 4. Check if this Book is already in the store's inventory
+    const existingItem = store.inventory.find(
+      (item) => item.book.toString() === book._id.toString()
+    );
+
+    if (existingItem) {
+      // If the Book already exists, update store-specific price and increment quantity
+      existingItem.price = parsedPrice;
+      existingItem.quantity += parsedQuantity;
+    } else {
+      // Otherwise, add a new entry to the inventory array
+      store.inventory.push({
+        book: book._id,
+        price: parsedPrice,
+        quantity: parsedQuantity,
+      });
+    }
+
+    // 5. Save the Store
+    await store.save();
+
+    return res.status(200).json({
+      message: "Book added/updated in store inventory successfully",
+      store,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+    console.error(error);
+    return res.status(500).json({ message: "Server Error", error });
   }
 };

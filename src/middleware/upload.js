@@ -1,20 +1,23 @@
+// middleware/upload.js
 const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
 
-// Ensure the uploads directory exists
-const uploadDir = "uploads/";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dco22xvey",
+  api_key: process.env.CLOUDINARY_API_KEY || "252976365554162",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "jEgVw7Hu44MP9QklJP89-1c2nyA",
+});
 
-// Set up storage engine
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+// Set up Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "mern_app", // You can organize uploads into folders
+    allowed_formats: ["jpg", "jpeg", "png", "gif"],
+    transformation: [{ width: 1000, crop: "limit" }], // Optional transformations
   },
 });
 
@@ -28,6 +31,10 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ storage, fileFilter, limits: { fileSize: 2 * 1024 * 1024 } }); // Limit: 2MB
+const upload = multer({ 
+  storage, 
+  fileFilter, 
+  limits: { fileSize: 2 * 1024 * 1024 } // Limit: 2MB
+});
 
 module.exports = upload;
