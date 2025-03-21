@@ -5,7 +5,9 @@ const {
   getStoreById,
   updateStore,
   deleteStore,
-  addBookToStoreInventory
+  addBookToStoreInventory,
+  updateStoreInventoryItem,
+  deleteStoreInventoryItem,
 } = require("../controllers/adminStoreController");
 const { authenticateAdmin } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
@@ -29,5 +31,10 @@ router.delete("/:id", authenticateAdmin, deleteStore);
 
 router.post("/:storeId/inventory", authenticateAdmin, addBookToStoreInventory);
 
+// PUT: Update store inventory item (price, quantity, etc.)
+router.put("/:storeId/inventory/:inventoryItemId", authenticateAdmin, updateStoreInventoryItem);
+
+// DELETE: Remove a book from store inventory
+router.delete("/:storeId/inventory/:inventoryItemId", authenticateAdmin, deleteStoreInventoryItem);
 
 module.exports = router;
