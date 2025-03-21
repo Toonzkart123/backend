@@ -120,36 +120,66 @@ exports.updateStore = async (req, res) => {
 
 
 
-// 🔹 Add a Book in a Store’s Inventory
+
+
 
 // exports.addBookToStoreInventory = async (req, res) => {
 //   try {
 //     const { storeId } = req.params;
 //     const {
-//       isbn,
 //       title,
 //       author,
+//       isbn,
 //       category,
 //       description,
 //       price,
-//       quantity,
-//       // Add any additional fields if needed
+//       originalPrice,
+//       discount,
+//       stock,
+//       status,
+//       publisher,
+//       publishDate,
+//       language,
+//       pages,
+//       quantity, // store-specific quantity
 //     } = req.body;
+
+//     // Convert numeric fields from strings if necessary
+//     const parsedPrice = parseFloat(price);
+//     const parsedOriginalPrice = parseFloat(originalPrice);
+//     const parsedDiscount = parseFloat(discount);
+//     const parsedStock = parseInt(stock, 10);
+//     const parsedPages = parseInt(pages, 10);
+//     const parsedQuantity = parseInt(quantity, 10);
+
+//     // Validate required fields (as in your global addBook)
+//     if (!title || !author || !isbn || isNaN(parsedPrice) || isNaN(parsedStock) || !category) {
+//       return res.status(400).json({ message: "Please provide all required fields correctly." });
+//     }
 
 //     // 1. Check if the Book already exists in the global inventory by ISBN
 //     let book = await Book.findOne({ isbn });
 
-//     // 2. If not, create a new Book in the global inventory
+//     // 2. If not, create a new Book in the global inventory with the provided fields
 //     if (!book) {
+//       let imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
 //       book = new Book({
-//         isbn,
 //         title,
 //         author,
+//         isbn,
 //         category,
 //         description,
-//         price: parseFloat(price) || 0,  // optional "global" price
-//         stock: parseInt(quantity) || 0, // if you want to track global stock
-//         // ... other fields from req.body if needed
+//         price: parsedPrice,
+//         originalPrice: parsedOriginalPrice || null,
+//         discount: parsedDiscount || 0,
+//         stock: parsedStock,
+//         status,
+//         publisher,
+//         publishDate: publishDate ? new Date(publishDate) : null,
+//         language,
+//         pages: parsedPages || 0,
+//         image: imageUrl,
 //       });
 //       await book.save();
 //     }
@@ -166,15 +196,15 @@ exports.updateStore = async (req, res) => {
 //     );
 
 //     if (existingItem) {
-//       // If the Book already exists, update price/quantity
-//       existingItem.price = parseFloat(price);
-//       existingItem.quantity += parseInt(quantity, 10);
+//       // If the Book already exists, update store-specific price and increment quantity
+//       existingItem.price = parsedPrice;
+//       existingItem.quantity += parsedQuantity;
 //     } else {
-//       // Otherwise, push a new item
+//       // Otherwise, add a new entry to the inventory array
 //       store.inventory.push({
 //         book: book._id,
-//         price: parseFloat(price),
-//         quantity: parseInt(quantity, 10),
+//         price: parsedPrice,
+//         quantity: parsedQuantity,
 //       });
 //     }
 
@@ -192,11 +222,6 @@ exports.updateStore = async (req, res) => {
 // };
 
 
-
-
-
-
-
 exports.addBookToStoreInventory = async (req, res) => {
   try {
     const { storeId } = req.params;
@@ -205,55 +230,38 @@ exports.addBookToStoreInventory = async (req, res) => {
       author,
       isbn,
       category,
-      description,
       price,
-      originalPrice,
-      discount,
       stock,
-      status,
-      publisher,
-      publishDate,
-      language,
-      pages,
-      quantity, // store-specific quantity
+      quantity,
+      // Optional fields (if needed)
+      description,
+      image
     } = req.body;
 
-    // Convert numeric fields from strings if necessary
+    // Convert numeric values
     const parsedPrice = parseFloat(price);
-    const parsedOriginalPrice = parseFloat(originalPrice);
-    const parsedDiscount = parseFloat(discount);
     const parsedStock = parseInt(stock, 10);
-    const parsedPages = parseInt(pages, 10);
     const parsedQuantity = parseInt(quantity, 10);
 
-    // Validate required fields (as in your global addBook)
-    if (!title || !author || !isbn || isNaN(parsedPrice) || isNaN(parsedStock) || !category) {
-      return res.status(400).json({ message: "Please provide all required fields correctly." });
+    // Validate required fields
+    if (!title || !author || !isbn || !category || isNaN(parsedPrice) || isNaN(parsedStock) || isNaN(parsedQuantity)) {
+      return res.status(400).json({ message: "Please provide Title, Author, ISBN, Category, Price, Stock, and Quantity correctly." });
     }
 
     // 1. Check if the Book already exists in the global inventory by ISBN
     let book = await Book.findOne({ isbn });
 
-    // 2. If not, create a new Book in the global inventory with the provided fields
+    // 2. If not, create a new Book in the global inventory using only the compulsory fields (plus optional description or image if provided)
     if (!book) {
-      let imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
       book = new Book({
         title,
         author,
         isbn,
         category,
-        description,
         price: parsedPrice,
-        originalPrice: parsedOriginalPrice || null,
-        discount: parsedDiscount || 0,
         stock: parsedStock,
-        status,
-        publisher,
-        publishDate: publishDate ? new Date(publishDate) : null,
-        language,
-        pages: parsedPages || 0,
-        image: imageUrl,
+        description: description || "",
+        image: image || null
       });
       await book.save();
     }
@@ -270,11 +278,11 @@ exports.addBookToStoreInventory = async (req, res) => {
     );
 
     if (existingItem) {
-      // If the Book already exists, update store-specific price and increment quantity
+      // If the Book already exists in the store inventory, update the store-specific price and increment quantity
       existingItem.price = parsedPrice;
       existingItem.quantity += parsedQuantity;
     } else {
-      // Otherwise, add a new entry to the inventory array
+      // Otherwise, add a new item with the store-specific fields
       store.inventory.push({
         book: book._id,
         price: parsedPrice,
