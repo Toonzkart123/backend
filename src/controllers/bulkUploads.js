@@ -203,6 +203,72 @@ exports.uploadBooks = async (req, res) => {
 
 //School upload
 
+// exports.uploadSchools = async (req, res) => {
+//   try {
+//     // Read the file (Excel or CSV) from the uploaded buffer
+//     // using defval: "" so empty cells become empty strings
+//     const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+//     const sheetName = workbook.SheetNames[0];
+//     const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
+
+//     console.log('Parsed Excel data:', sheetData);
+
+//     let validSchools = [];
+//     let errors = [];
+    
+
+
+//     sheetData.forEach((row, index) => {
+//       // Extract fields from the row
+//       // "SR NO" is optional, so we won't validate it as required
+//       // but you can log or store it if you wish.
+//       // const srNo = row['SR NO'] || row['Sr no'] || row['sr no'] || ""; 
+//       const name = row['SCHOOL NAME'] || row['School name'] || row['school name'] || "";
+//       const address = row['ADDRESS'] || row['Address'] || row['address'] || "";
+//       const city = row['CITY'] || row['City'] || row['city'] || "";
+      
+//       // image is optional in your schema, so if it doesn't exist, that's okay
+
+//       // Check required fields: name, address, city
+//       if (!name || !address || !city) {
+//         errors.push(
+//           `Row ${index + 2}: Missing required fields (name, address, city).`
+//         );
+//         return; // Skip this row
+//       }
+
+//       const schoolObj = {
+//         name,
+//         address,   // top-level
+//         city,      // top-level
+//         image: row['image'] || row['Image'] || undefined,
+//       };
+
+//       validSchools.push(schoolObj);
+//     });
+
+//     // If any rows were invalid, return a 400 with details
+//     if (errors.length > 0) {
+//       return res.status(400).json({
+//         message: "Some rows are missing required fields.",
+//         errors
+//       });
+//     }
+
+//     // Insert all valid school documents in bulk
+//     await School.insertMany(validSchools);
+//     res.status(200).json({ message: 'Schools uploaded successfully' });
+//   } catch (error) {
+//     console.error('Error uploading schools:', error);
+//     res.status(500).json({ message: 'Error uploading schools', error });
+//   }
+// };
+
+
+
+
+//School upload
+
 exports.uploadSchools = async (req, res) => {
   try {
     // Read the file (Excel or CSV) from the uploaded buffer
@@ -215,7 +281,7 @@ exports.uploadSchools = async (req, res) => {
 
     let validSchools = [];
     let errors = [];
-
+    
 
 
     sheetData.forEach((row, index) => {
@@ -226,9 +292,14 @@ exports.uploadSchools = async (req, res) => {
       const name = row['SCHOOL NAME'] || row['School name'] || row['school name'] || "";
       const address = row['ADDRESS'] || row['Address'] || row['address'] || "";
       const city = row['CITY'] || row['City'] || row['city'] || "";
+
+            // handle image
+            let rawImage = row['image'] || row['Image'] || "";
+            if (!rawImage.trim()) {
+              rawImage = undefined;
+            }
       
       // image is optional in your schema, so if it doesn't exist, that's okay
-      const image = row['image'] || row['Image'] || "";
 
       // Check required fields: name, address, city
       if (!name || !address || !city) {
@@ -242,7 +313,7 @@ exports.uploadSchools = async (req, res) => {
         name,
         address,   // top-level
         city,      // top-level
-        image
+        image: rawImage,
       };
 
       validSchools.push(schoolObj);
