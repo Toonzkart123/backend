@@ -1,7 +1,6 @@
 const Stationery = require("../models/stationeryModel");
 const fs = require("fs"); // For deleting images from the server
 
-// 🔹 Add a New Stationery Item (Admin Only)
 exports.addStationery = async (req, res) => {
   try {
     const {
@@ -15,8 +14,8 @@ exports.addStationery = async (req, res) => {
       stock,
       status,
       material,
-      color
-      // Removed 'sku'
+      color,
+      code,  // ✅ New field added
     } = req.body;
 
     // Convert string values to numbers where needed
@@ -24,9 +23,16 @@ exports.addStationery = async (req, res) => {
     const parsedOriginalPrice = parseFloat(originalPrice);
     const parsedDiscount = parseFloat(discount);
     const parsedStock = parseInt(stock);
+    const parsedCode = parseInt(code);
 
-    // Check required fields: name, category, price, stock
-    if (!name || !category || isNaN(parsedPrice) || isNaN(parsedStock)) {
+    // Check required fields: name, category, price, stock, code
+    if (
+      !name ||
+      !category ||
+      isNaN(parsedPrice) ||
+      isNaN(parsedStock) ||
+      isNaN(parsedCode)
+    ) {
       return res
         .status(400)
         .json({ message: "Please provide all required fields correctly." });
@@ -48,14 +54,15 @@ exports.addStationery = async (req, res) => {
       status,
       material,
       color,
-      image: imageUrl
-      // No 'sku' field
+      code: parsedCode,  // ✅ Added code field here
+      image: imageUrl,
     });
 
     await newStationery.save();
-    return res
-      .status(201)
-      .json({ message: "Stationery item added successfully", stationery: newStationery });
+    return res.status(201).json({
+      message: "Stationery item added successfully",
+      stationery: newStationery,
+    });
   } catch (error) {
     return res.status(500).json({ message: "Server Error", error });
   }
@@ -88,7 +95,6 @@ exports.getStationeryById = async (req, res) => {
 
 
 
-// 🔹 Update a Stationery Item (Admin Only)
 exports.updateStationery = async (req, res) => {
   try {
     const {
@@ -102,8 +108,8 @@ exports.updateStationery = async (req, res) => {
       stock,
       status,
       material,
-      color
-      // Removed 'sku'
+      color,
+      code,  // ✅ New field added
     } = req.body;
 
     // Find existing item
@@ -117,13 +123,14 @@ exports.updateStationery = async (req, res) => {
     const parsedOriginalPrice = parseFloat(originalPrice);
     const parsedDiscount = parseFloat(discount);
     const parsedStock = parseInt(stock);
+    const parsedCode = parseInt(code);
 
     // If a new file is uploaded, update the image path
     if (req.file) {
         item.image = req.file.path; // Cloudinary URL
       }
 
-    // Update each field if provided; otherwise keep existing value
+    // Update each field if provided; otherwise, keep existing value
     if (name) item.name = name;
     if (brand) item.brand = brand;
     if (category) item.category = category;
@@ -135,12 +142,13 @@ exports.updateStationery = async (req, res) => {
     if (status) item.status = status;
     if (material) item.material = material;
     if (color) item.color = color;
-    // 'sku' is fully removed
+    if (!isNaN(parsedCode)) item.code = parsedCode; // ✅ Update code if provided
 
     await item.save();
-    return res
-      .status(200)
-      .json({ message: "Stationery item updated successfully", stationery: item });
+    return res.status(200).json({
+      message: "Stationery item updated successfully",
+      stationery: item,
+    });
   } catch (error) {
     return res.status(500).json({ message: "Server Error", error });
   }

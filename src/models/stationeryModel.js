@@ -23,7 +23,7 @@ const stationerySchema = new mongoose.Schema({
 
   material: { type: String },
   color: { type: String },
-
+  code:{ type: Number, required: true},
   image: { type: String },
 
   createdAt: { type: Date, default: Date.now },
