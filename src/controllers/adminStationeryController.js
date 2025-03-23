@@ -39,7 +39,8 @@ exports.addStationery = async (req, res) => {
     }
 
     // Handle Image Upload (if any file is uploaded)
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const imageUrl = req.file ? req.file.path : null;
+
 
     const newStationery = new Stationery({
       name,
@@ -126,8 +127,8 @@ exports.updateStationery = async (req, res) => {
 
     // If a new file is uploaded, update the image path
     if (req.file) {
-      item.image = `/uploads/${req.file.filename}`;
-    }
+        item.image = req.file.path; // Cloudinary URL
+      }
 
     // Update each field if provided; otherwise, keep existing value
     if (name) item.name = name;
