@@ -63,22 +63,73 @@ const loginStore = async (req, res) => {
   }
 };
 
-// 🔹 Fetch stores based on School ID
+// Existing Functionality (Fetching stores by schoolId)
 const getStoresBySchoolId = async (req, res) => {
   try {
     const { schoolId } = req.params;
 
-    // Find all stores linked to the given school ID
-    const stores = await Store.find({ school: schoolId });
+    const stores = await Store.find({ schools: schoolId });
 
     if (stores.length === 0) {
-      return res.status(404).json({ message: "No stores found for this school." });
+      return res.status(404).json({ message: 'No stores found for this school.' });
     }
 
     res.status(200).json(stores);
   } catch (error) {
-    console.error("Error fetching stores by school ID:", error);
-    res.status(500).json({ message: "Server Error", error });
+    console.error('Error fetching stores by school ID:', error);
+    res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+// ✅ New Functionality: Add a school ID to a store
+const addSchoolToStore = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const { schoolId } = req.body;
+
+    const updatedStore = await Store.findByIdAndUpdate(
+      storeId,
+      { $addToSet: { schools: schoolId } }, // Prevent duplicates
+      { new: true }
+    );
+
+    if (!updatedStore) {
+      return res.status(404).json({ message: 'Store not found.' });
+    }
+
+    res.status(200).json({
+      message: 'School added to store successfully.',
+      store: updatedStore
+    });
+  } catch (error) {
+    console.error('Error adding school to store:', error);
+    res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+// ✅ New Functionality: Remove a school ID from a store
+const removeSchoolFromStore = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const { schoolId } = req.body;
+
+    const updatedStore = await Store.findByIdAndUpdate(
+      storeId,
+      { $pull: { schools: schoolId } },
+      { new: true }
+    );
+
+    if (!updatedStore) {
+      return res.status(404).json({ message: 'Store not found.' });
+    }
+
+    res.status(200).json({
+      message: 'School removed from store successfully.',
+      store: updatedStore
+    });
+  } catch (error) {
+    console.error('Error removing school from store:', error);
+    res.status(500).json({ message: 'Server Error', error });
   }
 };
 
@@ -104,4 +155,4 @@ const getStoresByBookId = async (req, res) => {
   }
 };
 
-module.exports = { registerStore, loginStore, getStoresBySchoolId, getStoresByBookId };
+module.exports = { registerStore, loginStore, getStoresBySchoolId, getStoresByBookId, addSchoolToStore, removeSchoolFromStore };
