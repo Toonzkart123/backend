@@ -33,6 +33,8 @@ const publicStationeryRoutes = require("./src/routes/publicStationeryRoutes");
 
 const publicStoreRoutes = require("./src/routes/publicStoreRoutes");
 
+const bulkRoutes = require('./src/routes/bulkRoutes');
+
 dotenv.config();
 const app = express();
 
@@ -78,6 +80,9 @@ app.use("/api/admin/stationery", adminStationeryRoutes);
 app.use("/api/stationery", publicStationeryRoutes);
 
 app.use("/api/public/stores", publicStoreRoutes);
+
+app.use('/api', bulkRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Welcome to ToonzKart API!");
