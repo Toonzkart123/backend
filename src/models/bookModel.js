@@ -23,7 +23,7 @@ const bookSchema = new mongoose.Schema({
   title: { type: String, required: true },
   author: { type: String, required: true },
   isbn: { type: String, unique: true, required: true },
-  category: { type: String, required: true }, // New Field (Dropdown)
+  category: { type: String }, // New Field (Dropdown)
   description: { type: String },
 
   price: { type: Number, required: true }, // Current Price

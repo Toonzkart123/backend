@@ -13,5 +13,7 @@ const upload = multer({ storage });
 router.post('/upload/books', upload.single('file'), bulkUploads.uploadBooks);
 
 
+router.post('/upload/schools', upload.single('file'), bulkUploads.uploadSchools);
+
 module.exports = router;
 
