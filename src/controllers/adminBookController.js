@@ -30,7 +30,7 @@ exports.addBook = async (req, res) => {
 
 
     // Ensure required fields are provided
-    if (!title || !author || !isbn || isNaN(parsedPrice) || isNaN(parsedStock) || !category) {
+    if (!title || !author || !isbn || isNaN(parsedPrice) || isNaN(parsedStock)) {
       return res.status(400).json({ message: "Please provide all required fields correctly." });
     }
 
