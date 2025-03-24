@@ -11,4 +11,7 @@ const upload = multer({ storage });
 
 router.post('/upload/stationery', upload.single('file'), bulkUploads.uploadStationery);
 
+// Route to handle bulk upload of stores
+router.post('/upload/stores', upload.single('file'), bulkUploads.uploadStores);
+
 module.exports = router;

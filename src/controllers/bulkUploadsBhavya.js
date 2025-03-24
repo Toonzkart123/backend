@@ -1,5 +1,9 @@
 const xlsx = require('xlsx');
 const Stationery = require('../models/stationeryModel');
+const Store = require('../models/storeModel');
+const School = require('../models/schoolModel');
+const Book = require('../models/bookModel');
+
 
 // Bulk upload Stationery
 exports.uploadStationery = async (req, res) => {
@@ -91,3 +95,99 @@ exports.uploadStationery = async (req, res) => {
     res.status(500).json({ message: 'Error uploading stationery', error });
   }
 };
+
+exports.uploadStores = async (req, res) => {
+  try {
+    // Read the file from the uploaded buffer (Excel or CSV)
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    // Convert the sheet to JSON; defval: "" ensures empty cells become empty strings.
+    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
+
+    console.log("Parsed Excel data:", sheetData);
+    
+    let validStores = [];
+    let errors = [];
+    
+    // Use a for-of loop so we can await DB operations
+    for (let [index, row] of sheetData.entries()) {
+      const storeName = row['Name of the shop'];
+      const managerName = row['Owner Name'];
+      const phoneNumber = row['Contact Number'];
+      const address = row['Address'];
+
+      // Check required fields
+      if (!storeName || !managerName || !phoneNumber || !address) {
+        errors.push(`Row ${index + 2}: Missing required fields (Name of the shop, Owner Name, Contact Number, Address).`);
+        continue;
+      }
+      
+      let storeObj = {
+        storeName,
+        managerName,
+        phoneNumber,
+        address,
+        email: row['Email'] || "",
+        status: row['Status'] || "Pending",
+        website: row['Website'] || "",
+        storeHours: row['Store Hours'] || "",
+        image: row['Image'] || "",
+        description: row['Description'] || "",
+        commissionRate: Number(row['Commission Rate']) || 0,
+        paymentTerms: row['Payment Terms'] || "",
+        schools: [],
+        inventory: []
+      };
+
+      // Process School Names (comma-separated list)
+      if (row['School Names']) {
+        let schoolNames = row['School Names']
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+        for (const sName of schoolNames) {
+          const school = await School.findOne({ name: sName });
+          if (school) {
+            storeObj.schools.push(school._id);
+          } else {
+            console.log(`No school found for name: ${sName}`);
+          }
+        }
+      }
+      
+      // Process Inventory from the 'isbn' column (single value)
+      if (row['isbn']) {
+        let isbnVal = row['isbn'];
+        // Convert to string if necessary
+        if (typeof isbnVal !== "string") {
+          isbnVal = isbnVal.toString();
+        }
+        console.log(`Looking up book with ISBN: ${isbnVal}`);
+        const book = await Book.findOne({ isbn: isbnVal });
+        if (book) {
+          console.log(`Found book for ISBN ${isbnVal}: ${book.title}`);
+          storeObj.inventory.push({
+            book: book._id,
+            price: book.price || 0,
+            quantity: 0
+          });
+        } else {
+          console.log(`No book found for ISBN: ${isbnVal}`);
+        }
+      }
+      
+      validStores.push(storeObj);
+    }
+    
+    if (errors.length > 0) {
+      return res.status(400).json({ message: "Some rows are missing required fields.", errors });
+    }
+    
+    await Store.insertMany(validStores);
+    res.status(200).json({ message: "Stores uploaded successfully" });
+  } catch (error) {
+    console.error("Error uploading stores:", error);
+    res.status(500).json({ message: "Error uploading stores", error });
+  }
+};
+
