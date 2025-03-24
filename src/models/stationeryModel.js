@@ -5,7 +5,6 @@ const stationerySchema = new mongoose.Schema({
   brand: { type: String },
   category: {
     type: String,
-    required: true,
     enum: ["Pens", "Pencils", "Notebooks", "Erasers", "Markers", "Files & Folders", "Other"],
   },
   description: { type: String },
