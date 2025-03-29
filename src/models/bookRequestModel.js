@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const bookRequestSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User"},
   books: [
     {
       title: { type: String, required: true },
