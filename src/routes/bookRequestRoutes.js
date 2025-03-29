@@ -4,6 +4,6 @@ const { authenticateUser } = require("../middleware/authMiddleware");
 const { submitBookRequest } = require("../controllers/bookRequestController");
 
 // 📌 **User submits a book request**
-router.post("/", authenticateUser, submitBookRequest);
+router.post("/", submitBookRequest);
 
 module.exports = router;
