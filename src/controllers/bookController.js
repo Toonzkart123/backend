@@ -65,11 +65,19 @@ exports.getBookById = async (req, res) => {
   }
 };
 
-// GET all books or handle search queries
+
+
 exports.getAllBooks = async (req, res) => {
   try {
-    // Example: handle query ?search=keyword
+    // Extract search query if provided
     const searchTerm = req.query.search;
+    
+    // Determine the current page; default to 1 if not provided
+    const page = parseInt(req.query.page) || 1;
+    const limit = 50; // 50 books per page
+    const skip = (page - 1) * limit;
+
+    // Build your search query
     let query = {};
     if (searchTerm) {
       query = { 
@@ -79,12 +87,47 @@ exports.getAllBooks = async (req, res) => {
         ]
       };
     }
-    const books = await Book.find(query);
-    res.json(books);
+
+    // Retrieve the books with pagination
+    const books = await Book.find(query).skip(skip).limit(limit);
+    
+    // Optionally, get total count to compute total pages (useful for UI)
+    const totalBooks = await Book.countDocuments(query);
+    const totalPages = Math.ceil(totalBooks / limit);
+    
+    res.json({ 
+      page, 
+      totalPages,
+      books 
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error });
   }
 };
+
+
+// // GET all books or handle search queries
+// exports.getAllBooks = async (req, res) => {
+//   try {
+//     // Example: handle query ?search=keyword
+//     const searchTerm = req.query.search;
+//     let query = {};
+//     if (searchTerm) {
+//       query = { 
+//         $or: [
+//           { title: { $regex: searchTerm, $options: 'i' } },
+//           { author: { $regex: searchTerm, $options: 'i' } }
+//         ]
+//       };
+//     }
+//     const books = await Book.find(query);
+//     res.json(books);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server Error', error });
+//   }
+// };
+
+
 
 exports.getAllBookNames = async (req, res) => {
   try {
