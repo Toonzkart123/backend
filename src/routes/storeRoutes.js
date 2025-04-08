@@ -16,6 +16,7 @@ router.get('/school/:schoolId', getStoresBySchoolId);
 
 // ✅ New Routes (implement these)
 router.put('/:storeId/add-school', addSchoolToStore);
+
 router.put('/:storeId/remove-school', removeSchoolFromStore);
 
 // 🔹 Fetch store by ID
