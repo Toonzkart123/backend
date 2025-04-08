@@ -8,7 +8,8 @@ exports.addSchool = async (req, res) => {
 
     const school = new School({
       name,
-      location: { city, address },
+      city,
+      address,
       image,
     });
 
@@ -19,6 +20,25 @@ exports.addSchool = async (req, res) => {
     res.status(500).json({ message: "Server Error", error });
   }
 };
+
+// exports.addSchool = async (req, res) => {
+//   try {
+//     const { name, city, address } = req.body;
+//     const image = req.file ? req.file.path : null;
+
+//     const school = new School({
+//       name,
+//       location: { city, address },
+//       image,
+//     });
+
+//     await school.save();
+
+//     res.status(201).json({ message: "School added successfully", school });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server Error", error });
+//   }
+// };
 
 // 🔹 Get all schools
 exports.getAllSchools = async (req, res) => {
