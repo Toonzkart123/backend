@@ -102,53 +102,127 @@ exports.getBookById = async (req, res) => {
 
 
 
-  // 🔹 Update Book Details (Admin Only)
-exports.updateBook = async (req, res) => {
-    try {
-      const { title, author, isbn, category, description, price, originalPrice, discount, stock, status, publisher, publishDate, language, pages } = req.body;
+//   // 🔹 Update Book Details (Admin Only)
+// exports.updateBook = async (req, res) => {
+//     try {
+//       const { title, author, isbn, category, description, price, originalPrice, discount, stock, status, publisher, publishDate, language, pages } = req.body;
   
-      let book = await Book.findById(req.params.id);
-      if (!book) {
-        return res.status(404).json({ message: "Book not found" });
-      }
+//       let book = await Book.findById(req.params.id);
+//       if (!book) {
+//         return res.status(404).json({ message: "Book not found" });
+//       }
   
-      // Convert strings to numbers
-      const parsedPrice = parseFloat(price);
-      const parsedOriginalPrice = parseFloat(originalPrice);
-      const parsedDiscount = parseFloat(discount);
-      const parsedStock = parseInt(stock);
-      const parsedPages = parseInt(pages);
+//       // Convert strings to numbers
+//       const parsedPrice = parseFloat(price);
+//       const parsedOriginalPrice = parseFloat(originalPrice);
+//       const parsedDiscount = parseFloat(discount);
+//       const parsedStock = parseInt(stock);
+//       const parsedPages = parseInt(pages);
   
-      // Handle Image Upload (If a new file is uploaded)
-      // if (req.file) {
-      //   book.image = `/uploads/${req.file.filename}`;
-      // }
+//       // Handle Image Upload (If a new file is uploaded)
+//       // if (req.file) {
+//       //   book.image = `/uploads/${req.file.filename}`;
+//       // }
   
-      book.image = req.file.path; // Cloudinary URL
+//       book.image = req.file.path; // Cloudinary URL
 
-      // Update fields
-      book.title = title || book.title;
-      book.author = author || book.author;
-      book.isbn = isbn || book.isbn;
-      book.category = category || book.category;
-      book.description = description || book.description;
-      book.price = !isNaN(parsedPrice) ? parsedPrice : book.price;
-      book.originalPrice = !isNaN(parsedOriginalPrice) ? parsedOriginalPrice : book.originalPrice;
-      book.discount = !isNaN(parsedDiscount) ? parsedDiscount : book.discount;
-      book.stock = !isNaN(parsedStock) ? parsedStock : book.stock;
-      book.status = status || book.status;
-      book.publisher = publisher || book.publisher;
-      book.publishDate = publishDate ? new Date(publishDate) : book.publishDate;
-      book.language = language || book.language;
-      book.pages = !isNaN(parsedPages) ? parsedPages : book.pages;
+//       // Update fields
+//       book.title = title || book.title;
+//       book.author = author || book.author;
+//       book.isbn = isbn || book.isbn;
+//       book.category = category || book.category;
+//       book.description = description || book.description;
+//       book.price = !isNaN(parsedPrice) ? parsedPrice : book.price;
+//       book.originalPrice = !isNaN(parsedOriginalPrice) ? parsedOriginalPrice : book.originalPrice;
+//       book.discount = !isNaN(parsedDiscount) ? parsedDiscount : book.discount;
+//       book.stock = !isNaN(parsedStock) ? parsedStock : book.stock;
+//       book.status = status || book.status;
+//       book.publisher = publisher || book.publisher;
+//       book.publishDate = publishDate ? new Date(publishDate) : book.publishDate;
+//       book.language = language || book.language;
+//       book.pages = !isNaN(parsedPages) ? parsedPages : book.pages;
   
-      await book.save();
+//       await book.save();
   
-      res.status(200).json({ message: "Book updated successfully", book });
-    } catch (error) {
-      res.status(500).json({ message: "Server Error", error });
+//       res.status(200).json({ message: "Book updated successfully", book });
+//     } catch (error) {
+//       res.status(500).json({ message: "Server Error", error });
+//     }
+//   };
+
+exports.updateBook = async (req, res) => {
+  try {
+    const { 
+      title, author, isbn, category, description, 
+      price, originalPrice, discount, stock, status, 
+      publisher, publishDate, language, pages 
+    } = req.body;
+
+    let book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
     }
-  };
+
+    // Convert strings to numbers (only if they are provided)
+    const parsedPrice = price ? parseFloat(price) : NaN;
+    const parsedOriginalPrice = originalPrice ? parseFloat(originalPrice) : NaN;
+    const parsedDiscount = discount ? parseFloat(discount) : NaN;
+    const parsedStock = stock ? parseInt(stock) : NaN;
+    const parsedPages = pages ? parseInt(pages) : NaN;
+
+    // Only update the image if a new file is uploaded
+    if (req.file) {
+      book.image = req.file.path; // Cloudinary URL or uploaded file path
+    }
+
+    // Update text fields; if the new value is provided (even if empty string may be intentional),
+    // you may want to further validate these values before assigning.
+    if (typeof title !== 'undefined') book.title = title;
+    if (typeof author !== 'undefined') book.author = author;
+    if (typeof isbn !== 'undefined') book.isbn = isbn;
+    if (typeof category !== 'undefined') book.category = category;
+    if (typeof description !== 'undefined') book.description = description;
+
+    // Update numeric fields with proper checks:
+    if (!isNaN(parsedPrice)) {
+      book.price = parsedPrice;
+    }
+    if (!isNaN(parsedOriginalPrice)) {
+      book.originalPrice = parsedOriginalPrice;
+    }
+    if (!isNaN(parsedDiscount)) {
+      book.discount = parsedDiscount;
+    }
+    if (!isNaN(parsedStock)) {
+      book.stock = parsedStock;
+    }
+    if (!isNaN(parsedPages)) {
+      book.pages = parsedPages;
+    }
+
+    if (typeof status !== 'undefined') book.status = status;
+    if (typeof publisher !== 'undefined') book.publisher = publisher;
+    if (publishDate) {
+      // Ensure the publishDate is valid; if not, you could skip updating it or log a warning.
+      const newPublishDate = new Date(publishDate);
+      if (!isNaN(newPublishDate.getTime())) {
+        book.publishDate = newPublishDate;
+      } else {
+        console.warn("Invalid publishDate provided:", publishDate);
+      }
+    }
+    if (typeof language !== 'undefined') book.language = language;
+
+    await book.save();
+
+    res.status(200).json({ message: "Book updated successfully", book });
+  } catch (error) {
+    console.error("Error updating book:", error);
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
+
 
 
   // 🔹 Delete a Book (Admin Only)
