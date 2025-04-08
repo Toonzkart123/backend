@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const storeSchema = new mongoose.Schema({
-  storeName: { type: String, required: true },
-  address: { type: String, required: true },
-  phoneNumber: { type: String, required: true },
+  storeName: { type: String},
+  address: { type: String},
+  phoneNumber: { type: String},
   email: { type: String },
-  managerName: { type: String, required: true },
+  managerName: { type: String},
   status: { type: String, enum: ["Pending", "Active", "Inactive"], default: "Pending" },
   website: { type: String },
   storeHours: { type: String },
