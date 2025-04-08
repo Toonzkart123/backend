@@ -28,11 +28,10 @@ exports.addStationery = async (req, res) => {
     // Check required fields: name, category, price, stock, code
     if (
       !name ||
-      !category ||
       isNaN(parsedPrice) ||
-      isNaN(parsedStock) ||
-      isNaN(parsedCode)
-    ) {
+      isNaN(parsedStock)
+    ) 
+    {
       return res
         .status(400)
         .json({ message: "Please provide all required fields correctly." });
