@@ -24,46 +24,60 @@
 //   }
 // };
 
-
-
 const BookRequest = require("../models/bookRequestModel");
 
 // ✅ **1. Submit a Book Request (User or Guest)**
 exports.submitBookRequest = async (req, res) => {
   try {
     const {
-      books,
+      books: booksRaw,
       phoneNumber,
-      schoolName,    // optional
-      studentName,   // optional
+      schoolName,
+      studentName,
+      studentClass,
     } = req.body;
 
-    // Since we no longer require the user to be logged in, remove userId references
-    // const userId = req.user._id;  // remove this if not needed
+    let books = [];
 
-    if (!books || books.length === 0) {
-      return res.status(400).json({ message: "Book list cannot be empty" });
+    // Try parsing book list
+    if (booksRaw) {
+      try {
+        books = JSON.parse(booksRaw); // because FormData sends as string
+      } catch (err) {
+        return res.status(400).json({ message: "Invalid book list format" });
+      }
+    }
+
+    const file = req.file;
+    const fileUrl = file ? file.path : null;
+
+    if ((!books || books.length === 0) && !fileUrl) {
+      return res.status(400).json({
+        message: "Please provide either a book list or upload a file",
+      });
     }
 
     if (!phoneNumber) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    // Create the request without referencing any user ID
     const request = new BookRequest({
-      // user: userId, // remove if not needed
       books,
       phoneNumber,
-      schoolName,    // optional field
-      studentName,   // optional field
+      schoolName,
+      studentClass,
+      studentName,
+      fileUrl,
       status: "Pending",
     });
 
     await request.save();
+
     res
       .status(201)
       .json({ message: "Request submitted successfully", request });
   } catch (error) {
+    console.error("Error submitting request:", error);
     res.status(500).json({ message: "Server Error", error });
   }
 };
