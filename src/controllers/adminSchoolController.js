@@ -75,11 +75,38 @@ exports.updateSchool = async (req, res) => {
       updatedData.image = req.file.path;
     }
 
-    const school = await School.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+    const school = await School.findByIdAndUpdate(req.params.id, updatedData, {
+      new: true,
+    });
 
     if (!school) return res.status(404).json({ message: "School not found" });
 
     res.status(200).json({ message: "School updated successfully", school });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+};
+
+// 🔹 Update school details
+exports.addSchoolBookset = async (req, res) => {
+  try {
+    const { bookset } = req.body;
+    if (!bookset || (Array.isArray(bookset) && bookset.length === 0)) {
+      return res.status(404).json({ message: "Bookset cannot be empty." });
+    }
+
+    const updatedData = { bookset };
+
+    const school = await School.findByIdAndUpdate(
+      req.params.id,
+      updatedData,
+      { $set: { bookset } }, // Proper partial update
+      { new: true, runValidators: true }
+    );
+
+    if (!school) return res.status(404).json({ message: "School not found" });
+
+    res.status(200).json({ message: "Bookset updated successfully", school });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
   }
